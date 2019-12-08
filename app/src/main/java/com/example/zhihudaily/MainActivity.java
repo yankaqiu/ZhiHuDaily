@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.widget.Toast;
 
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -29,12 +30,11 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity {
 
     ArrayList<ItenBean> news = new ArrayList<>();
-
+    ItenBean.StoriesBean story;
+    ArrayList<ItenBean.StoriesBean>stories=new ArrayList<>();
     private Banner banner;
-    ItenBean data = new ItenBean();
+    ItenBean data=new ItenBean();
 
-
-    ArrayList<String> ids = new ArrayList<>();
     RecyclerView recyclerView;
     ArticleAdapter adapter;
     String date=getDate1();
@@ -54,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
         sendRequestWithOkHttp();
 //        initView();
         refresh();
-
 
     }
 
@@ -78,7 +77,7 @@ public class MainActivity extends AppCompatActivity {
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
         c.add(Calendar.DAY_OF_MONTH, -otherdate);
-        String date = new SimpleDateFormat("MM").format(c.getTime());
+        String date = new SimpleDateFormat("yyyyMMdd").format(c.getTime());
         return date;
     }
 
@@ -87,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         refreshLayout = findViewById(R.id.refresh);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new ArticleAdapter(this);
+        adapter = new ArticleAdapter(this,news);
         adapter.initData(data);
         recyclerView.setAdapter(adapter);
         load();
@@ -132,18 +131,21 @@ public class MainActivity extends AppCompatActivity {
                 Gson gson = new Gson();
                 data = gson.fromJson(msg.obj.toString(), ItenBean.class);
                 news.add(data);
-                date=data.getDate();
+                //date=data.getDate();
                 initView();
             }
-//            else if(msg.what==0){
-//                Gson gson = new Gson();
-//                 data= gson.fromJson(msg.obj.toString(), ItenBean.class);
-//                news.add(data);
-//            }
+            else if(msg.what==0){
+                Gson gson = new Gson();
+                 story= gson.fromJson(msg.obj.toString(), ItenBean.StoriesBean.class);
+                for(int i=0;i<data.getStories().size();i++){
+                    stories.add(story);
+                }
+                //date=data.getDate();
+            }
         }
     };
 
-    private void onLoadMore(final String url) {
+    private void onLoadMore() {
         initView();
         new Thread(new Runnable() {
             @Override
@@ -151,14 +153,14 @@ public class MainActivity extends AppCompatActivity {
                 try {
 //                        OkHttpClient client = new OkHttpClient();
                     Request request = new Request.Builder()
-                            .url(url)
+                            .url("https://news-at.zhihu.com/api/3/news/before/"+getDate1())
                             .build();
                     final Call call = Client.getInstance().newCall(request);
 //                        Response response = client.newCall(request).execute();
                     Response response = call.execute();
                     String responseData = response.body().string();
                     Message message = Message.obtain();
-                    message.what = 1;
+                    message.what = 0;
                     message.obj = responseData;
                     handler.sendMessage(message);
 
@@ -202,7 +204,8 @@ public class MainActivity extends AppCompatActivity {
                 firstVisibleItem = linearLayoutManager.findFirstVisibleItemPosition();
                 visibleItemCount = recyclerView.getChildCount();
                 if (((totalItemCount - visibleItemCount) <= firstVisibleItem)) {
-                    onLoadMore("https://news-at.zhihu.com/api/3/news/before/"+date);
+                    otherdate++;
+                    onLoadMore();
                 }
             }
 

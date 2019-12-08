@@ -35,16 +35,15 @@ public class ArticleAdapter extends RecyclerView.Adapter {
     private View banner;
     int size = 1;
 
-    public ArticleAdapter(Context mcontext) {
-       stories=new ArrayList<>();
-       topStories= new ArrayList<>();
-       this.mcontext=mcontext;
+    public ArticleAdapter(Context mcontext,ArrayList<ItenBean> mdata) {
+        this.mcontext=mcontext;
+       this.mdata=mdata;
     }
 
     public void initData(ItenBean datas) {
         this.datas = datas;
-        stories.clear();
-        topStories.clear();
+//        stories.clear();
+//        topStories.clear();
         this.stories = (ArrayList<ItenBean.StoriesBean>) datas.getStories();
         this.topStories = (ArrayList<ItenBean.TopStoriesBean>) datas.getTop_stories();
         size = stories.size() + 1;
@@ -110,15 +109,6 @@ public class ArticleAdapter extends RecyclerView.Adapter {
         }
     }
 
-
-    public void setBanner(View banner) {
-        this.banner = banner;
-        notifyItemInserted(0);
-    }
-
-    public View getBanner() {
-        return banner;
-    }
 
     private int getRealPosition(RecyclerView.ViewHolder holder) {
         int position = holder.getLayoutPosition();
